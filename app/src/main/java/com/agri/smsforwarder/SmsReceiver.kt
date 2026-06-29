@@ -63,7 +63,7 @@ class SmsReceiver : BroadcastReceiver() {
         }.toString()
 
         val client = OkHttpClient()
-        val requestBody = json.toRequestBody("application/json".toMediaType())
+        val requestBody = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
