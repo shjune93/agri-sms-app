@@ -4,6 +4,7 @@ plugins {
 }
 
 android {
+    namespace "com.agri.smsforwarder"
     compileSdk 34
 
     defaultConfig {
