@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F9FA"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- 타이틀 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌱 농업 SMS 자동 전송"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#1a1a1a"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="공판장 문자를 받으면 자동으로 농업경영 사이트에 저장합니다"
+            android:textSize="13sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 상태 표시 -->
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏸ 전송 비활성화됨"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 카드: Webhook URL -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:elevation="2dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Webhook URL"
+                android:textSize="13sp"
+                android:textColor="#888888"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etWebhookUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="https://내서버주소/api/ingest?key=..."
+                android:inputType="textUri"
+                android:textSize="13sp"
+                android:singleLine="true"
+                android:background="@android:drawable/edit_text" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="사이트 → 수익 관리 → 자동 수집 → Webhook URL 복사"
+                android:textSize="11sp"
+                android:textColor="#AAAAAA"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 카드: 발신번호 필터 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:elevation="2dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="발신번호 필터 (선택)"
+                android:textSize="13sp"
+                android:textColor="#888888"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etSenderFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="02-3435-7000, 051-123-4567"
+                android:inputType="text"
+                android:textSize="13sp"
+                android:singleLine="true"
+                android:background="@android:drawable/edit_text" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="쉼표로 구분. 비워두면 모든 문자 전송."
+                android:textSize="11sp"
+                android:textColor="#AAAAAA"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 카드: 활성화 스위치 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:elevation="2dp"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="자동 전송 활성화"
+                android:textSize="15sp"
+                android:textColor="#1a1a1a" />
+
+            <Switch
+                android:id="@+id/swEnabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- 저장 버튼 -->
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="저장"
+            android:textSize="16sp"
+            android:backgroundTint="#16A34A"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 안내 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="문자 수신 시 토스트 알림으로 전송 결과를 알려줍니다\n앱을 종료해도 백그라운드에서 계속 동작합니다"
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+</ScrollView>
