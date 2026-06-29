@@ -2,8 +2,10 @@ package com.agri.smsforwarder
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -29,9 +31,10 @@ class MainActivity : AppCompatActivity() {
         val etFilter = findViewById<EditText>(R.id.etSenderFilter)
         val swEnabled = findViewById<Switch>(R.id.swEnabled)
         val btnSave = findViewById<Button>(R.id.btnSave)
+        val btnNotification = findViewById<Button>(R.id.btnNotificationAccess)
         val tvStatus = findViewById<TextView>(R.id.tvStatus)
+        val tvNotiStatus = findViewById<TextView>(R.id.tvNotiStatus)
 
-        // 저장된 값 불러오기
         etUrl.setText(prefs.getString(KEY_WEBHOOK_URL, ""))
         etFilter.setText(prefs.getString(KEY_SENDER_FILTER, ""))
         swEnabled.isChecked = prefs.getBoolean(KEY_ENABLED, false)
@@ -57,13 +60,36 @@ class MainActivity : AppCompatActivity() {
             updateStatus(tvStatus, enabled)
             Toast.makeText(this, "저장됐습니다", Toast.LENGTH_SHORT).show()
 
-            // SMS 권한 요청
             if (enabled) requestSmsPermission()
         }
 
-        swEnabled.setOnCheckedChangeListener { _, checked ->
-            updateStatus(tvStatus, checked)
+        // 카카오톡 알림 접근 권한 버튼
+        btnNotification.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         }
+
+        swEnabled.setOnCheckedChangeListener { _, checked -> updateStatus(tvStatus, checked) }
+
+        updateNotiStatus(tvNotiStatus)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val tvNotiStatus = findViewById<TextView>(R.id.tvNotiStatus)
+        updateNotiStatus(tvNotiStatus)
+    }
+
+    private fun updateNotiStatus(tv: TextView) {
+        val granted = isNotificationListenerEnabled()
+        tv.text = if (granted) "✅ 카카오톡 알림 수신 허용됨" else "⚠️ 카카오톡 알림 권한 없음 (아래 버튼 탭)"
+        tv.setTextColor(
+            ContextCompat.getColor(this, if (granted) android.R.color.holo_green_dark else android.R.color.holo_orange_dark)
+        )
+    }
+
+    private fun isNotificationListenerEnabled(): Boolean {
+        val enabledListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: return false
+        return enabledListeners.contains(packageName)
     }
 
     private fun updateStatus(tv: TextView, enabled: Boolean) {
@@ -74,28 +100,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestSmsPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS),
-                REQUEST_SMS
-            )
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_SMS) {
-            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-            Toast.makeText(
-                this,
-                if (granted) "SMS 권한 허용됨 — 문자 수신 시 자동 전송됩니다" else "SMS 권한이 필요합니다",
-                Toast.LENGTH_LONG
-            ).show()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS), REQUEST_SMS)
         }
     }
 }
