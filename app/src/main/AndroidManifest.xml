@@ -2,13 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.agri.smsforwarder">
 
-    <!-- SMS 수신 권한 -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
-    <!-- 인터넷 (webhook 전송) -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 백그라운드 유지 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -16,7 +12,6 @@
         android:label="농업SMS전송"
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
 
-        <!-- 메인 화면 -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -26,7 +21,6 @@
             </intent-filter>
         </activity>
 
-        <!-- SMS 수신 리시버 -->
         <receiver
             android:name=".SmsReceiver"
             android:exported="true"
@@ -36,14 +30,22 @@
             </intent-filter>
         </receiver>
 
-        <!-- 부팅 후 자동 시작 리시버 -->
-        <receiver
-            android:name=".BootReceiver"
-            android:exported="true">
+        <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- 카카오톡 알림 수신 서비스 -->
+        <service
+            android:name=".NotificationListener"
+            android:exported="true"
+            android:label="농업SMS전송"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>
