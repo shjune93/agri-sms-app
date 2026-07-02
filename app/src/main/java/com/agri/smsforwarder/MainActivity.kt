@@ -1,11 +1,13 @@
 package com.agri.smsforwarder
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
+import android.text.TextUtils
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -31,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         val etFilter = findViewById<EditText>(R.id.etSenderFilter)
         val swEnabled = findViewById<Switch>(R.id.swEnabled)
         val btnSave = findViewById<Button>(R.id.btnSave)
-        val btnNotification = findViewById<Button>(R.id.btnNotificationAccess)
+        val btnNoti = findViewById<Button>(R.id.btnNotificationAccess)
         val tvStatus = findViewById<TextView>(R.id.tvStatus)
         val tvNotiStatus = findViewById<TextView>(R.id.tvNotiStatus)
 
@@ -63,14 +65,19 @@ class MainActivity : AppCompatActivity() {
             if (enabled) requestSmsPermission()
         }
 
-        // 카카오톡 알림 접근 권한 버튼
-        btnNotification.setOnClickListener {
+        swEnabled.setOnCheckedChangeListener { _, checked ->
+            updateStatus(tvStatus, checked)
+        }
+
+        // 카카오톡 알림 권한 버튼
+        btnNoti.setOnClickListener {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         }
 
-        swEnabled.setOnCheckedChangeListener { _, checked -> updateStatus(tvStatus, checked) }
-
-        updateNotiStatus(tvNotiStatus)
+        // 전송 내역 버튼
+        findViewById<Button>(R.id.btnViewLog).setOnClickListener {
+            startActivity(Intent(this, LogActivity::class.java))
+        }
     }
 
     override fun onResume() {
@@ -81,15 +88,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateNotiStatus(tv: TextView) {
         val granted = isNotificationListenerEnabled()
-        tv.text = if (granted) "✅ 카카오톡 알림 수신 허용됨" else "⚠️ 카카오톡 알림 권한 없음 (아래 버튼 탭)"
+        tv.text = if (granted) "✅ 카카오톡 알림 수집 활성화됨" else "⚠️ 카카오톡 알림 권한 없음 — 아래 버튼으로 설정"
         tv.setTextColor(
             ContextCompat.getColor(this, if (granted) android.R.color.holo_green_dark else android.R.color.holo_orange_dark)
         )
     }
 
     private fun isNotificationListenerEnabled(): Boolean {
-        val enabledListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: return false
-        return enabledListeners.contains(packageName)
+        val flat = Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: return false
+        val cn = ComponentName(this, NotificationListener::class.java)
+        return flat.split(":").any {
+            try { ComponentName.unflattenFromString(it) == cn } catch (e: Exception) { false }
+        }
     }
 
     private fun updateStatus(tv: TextView, enabled: Boolean) {
@@ -100,9 +110,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestSmsPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS), REQUEST_SMS)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS),
+                REQUEST_SMS
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_SMS) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            Toast.makeText(this, if (granted) "SMS 권한 허용됨" else "SMS 권한이 필요합니다", Toast.LENGTH_LONG).show()
         }
     }
 }

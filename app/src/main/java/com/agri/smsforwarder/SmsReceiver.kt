@@ -26,6 +26,17 @@ class SmsReceiver : BroadcastReceiver() {
         if (!enabled) return
 
         val webhookUrl = prefs.getString(MainActivity.KEY_WEBHOOK_URL, "") ?: return
+        if (webhookUrl.isEmpty()) {
+            Log.e(TAG, "Webhook URL이 비어 있습니다")
+            return
+        }
+        if (!webhookUrl.contains("key=")) {
+            Log.e(TAG, "Webhook URL에 ?key= 파라미터가 없습니다. 사이트 → 자동수집 페이지에서 URL을 복사하세요.")
+            CoroutineScope(Dispatchers.Main).launch {
+                Toast.makeText(context, "❌ URL에 ?key= 없음. 앱 설정을 확인하세요", Toast.LENGTH_LONG).show()
+            }
+            return
+        }
         val filterRaw = prefs.getString(MainActivity.KEY_SENDER_FILTER, "") ?: ""
 
         // 발신번호 필터 목록 (쉼표 구분, 숫자만)
@@ -74,10 +85,26 @@ class SmsReceiver : BroadcastReceiver() {
             try {
                 val response = client.newCall(request).execute()
                 val responseBody = response.body?.string() ?: ""
-                Log.d(TAG, "전송 성공: ${response.code} — $responseBody")
+                Log.d(TAG, "전송: ${response.code} — $responseBody")
+
+                val success = response.isSuccessful
+                val detail = if (success) "✅ 서버 저장 완료 (${response.code})" else "⚠️ 서버 오류 (${response.code})"
+
+                LogStore.save(
+                    context,
+                    LogEntry(
+                        time    = System.currentTimeMillis(),
+                        sender  = sender,
+                        message = message,
+                        status  = if (success) "success" else "fail",
+                        code    = response.code,
+                        detail  = detail,
+                        source  = "sms",
+                    )
+                )
 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
+                    if (success) {
                         Toast.makeText(context, "✅ 판매내역 자동 저장됨", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "⚠️ 전송 실패: ${response.code}", Toast.LENGTH_SHORT).show()
@@ -85,6 +112,20 @@ class SmsReceiver : BroadcastReceiver() {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "전송 오류: ${e.message}")
+
+                LogStore.save(
+                    context,
+                    LogEntry(
+                        time    = System.currentTimeMillis(),
+                        sender  = sender,
+                        message = message,
+                        status  = "error",
+                        code    = 0,
+                        detail  = "❌ 네트워크 오류: ${e.message}",
+                        source  = "sms",
+                    )
+                )
+
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "❌ 네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
